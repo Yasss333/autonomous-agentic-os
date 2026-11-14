@@ -1,0 +1,18 @@
+:root {
+  font: 1rem/1.6 system-ui, sans-serif;
+  color: #192d21;
+  background: #eef3e9;
+}
+
+body { margin: 0; }
+main { max-width: 43rem; margin: 12vh auto; padding: 0 1.5rem; }
+h1 { font-size: clamp(2.1rem, 7vw, 4rem); line-height: 1.08; }
+a { color: #195336; }
+a:focus-visible { outline: 3px solid #195336; outline-offset: 4px; }
+.button {
+  display: inline-block;
+  padding: .7rem 1rem;
+  border-radius: .4rem;
+  background: #195336;
+  color: white;
+}
