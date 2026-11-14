@@ -42,6 +42,12 @@ def check_origin(request: Request) -> None:
         urlparse(o).netloc.lower() for o in config.ALLOWED_ORIGINS
     }
     if host not in allowed:
+        # Development: any localhost/loopback origin is fine (covers the IDE
+        # browser preview proxy, which uses a different port than Vite).
+        if config.APP_ENV == "development" and (
+            host.startswith("localhost") or host.startswith("127.0.0.1") or host.startswith("[::1]")
+        ):
+            return
         raise HTTPException(403, "Cross-origin request rejected")
 
 
