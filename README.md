@@ -26,6 +26,8 @@ On macOS or Linux, replace the Windows venv executable with `.venv/bin/python`. 
 
 Run `npm run build` from `web/`. With both services running, request `http://localhost:5173/api/health` and expect `{"status":"ok"}`. The starter runs without a Neon login, OpenRouter key, or Docker.
 
+The initial handoff passed the React production build, `pip check`, and live HTTP checks for the landing page, workspace, and Vite-to-FastAPI proxy. The HTTP check used port 15173 because port 5173 was occupied. If needed, run `npm run dev -- --port 15173` and open that port instead.
+
 Transfer the whole repo folder or clone the Git bundle. Start the new agent with: “Read AGENTS.md and README.md. Continue Phase 1 from the Neon and invited-login slice.” Keep private environment values outside the transfer.
 
 Next work: schema and migrations in Neon, invited login, and one lead flow. The starter screen reports API connectivity only.
