@@ -168,6 +168,27 @@ tbody tr.selected { background: var(--brand-soft); }
 .preview table { font-size: .8rem; }
 .preview th, .preview td { padding: .45rem .6rem; }
 
+.problem { padding-top: 3rem; padding-bottom: 3rem; }
+.problem-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2.5rem; align-items: start; }
+.problem-grid h2 { font-size: 1.4rem; }
+.solution { border-left: 3px solid var(--brand); padding-left: 1.6rem; }
+
+.pipeline { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0; position: relative; }
+.pipe-step { padding: 1.2rem .9rem .2rem; position: relative; }
+.pipe-step:not(:last-child)::after {
+  content: ""; position: absolute; top: 1.55rem; right: -.4rem;
+  width: .8rem; height: .8rem;
+  border-top: 2px solid var(--line); border-right: 2px solid var(--line);
+  transform: rotate(45deg);
+}
+.pipe-num {
+  width: 1.9rem; height: 1.9rem; border-radius: 50%;
+  background: var(--navy); color: #fff; font-weight: 700; font-size: .85rem;
+  display: flex; align-items: center; justify-content: center; margin-bottom: .7rem;
+}
+.pipe-step h3 { margin: 0 0 .3rem; font-size: .98rem; color: var(--navy); }
+.pipe-step p { margin: 0; color: var(--muted); font-size: .83rem; line-height: 1.5; }
+
 .section { max-width: 72rem; margin: 0 auto; padding: 4rem 1.5rem; }
 .section h2 { font-size: clamp(1.6rem, 3.5vw, 2.2rem); color: var(--navy); letter-spacing: -.01em; margin: 0 0 .6rem; }
 .section .lead { color: var(--muted); max-width: 38rem; margin: 0 0 2.2rem; }
@@ -242,6 +263,10 @@ main.auth p { color: var(--muted); }
   .sidenav { position: static; height: auto; flex-direction: row; flex-wrap: wrap; }
   .sidenav .who { display: none; }
   .steps, .features { grid-template-columns: 1fr; }
+  .problem-grid { grid-template-columns: 1fr; gap: 1.4rem; }
+  .solution { border-left: 0; border-top: 3px solid var(--brand); padding-left: 0; padding-top: 1.2rem; }
+  .pipeline { grid-template-columns: 1fr; gap: .4rem; }
+  .pipe-step:not(:last-child)::after { display: none; }
   .preview .mock { grid-template-columns: 1fr; }
   .preview .side { display: none; }
 }

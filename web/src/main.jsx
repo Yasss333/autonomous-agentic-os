@@ -11,6 +11,14 @@ import {
 } from './api.js'
 import './style.css'
 
+const PIPELINE = [
+  ['You ask', 'Plain English: “find leads idle for 7 days and create a follow-up task”.'],
+  ['It builds', 'The agent writes Python and a form description for your CRM.'],
+  ['It proves', 'The tool runs in a locked-down sandbox against real sample data.'],
+  ['It repairs', 'Failures go back to the agent — max 3 attempts, then it stops honestly.'],
+  ['You ship', 'Review, activate, run. Roll back to any previous version in one click.'],
+]
+
 function Landing() {
   return (
     <div className="landing">
@@ -20,17 +28,17 @@ function Landing() {
           <a href="#how">How it works</a>
           <a href="#features">Features</a>
           <a href="#faq">FAQ</a>
-          <a className="button" href="/login">Sign in</a>
+          <a className="button" href="/login">Launch demo</a>
         </div>
       </nav>
 
       <header className="hero">
-        <p className="eyebrow">Autonomous Agentic OS</p>
-        <h1>Turn a CRM task into a working tool.</h1>
+        <p className="eyebrow">Your CRM, on autopilot</p>
+        <h1>Say what you need. The agent builds the tool.</h1>
         <p className="sub">
-          Describe a follow-up workflow in plain English. The system generates
-          Python, tests it in an isolated sandbox, repairs failures, and runs it
-          against your CRM data — with versioned rollback.
+          Agentic OS turns a plain-English request into a working CRM
+          automation — generated, sandbox-tested, repaired, and versioned.
+          No consultants. No six-month rollout. Just describe the workflow.
         </p>
         <div className="ctas">
           <a className="button big" href="/login">Launch demo</a>
@@ -62,31 +70,45 @@ function Landing() {
         </div>
       </header>
 
-      <section className="section" id="how">
-        <h2>How it works</h2>
-        <p className="lead">Three steps from a sentence to a running CRM tool.</p>
-        <div className="steps">
-          <div className="step">
-            <div className="num">1</div>
-            <h3>Describe</h3>
-            <p>Write the workflow in plain English — e.g. “find leads idle for seven days and create a follow-up task”.</p>
+      <section className="section problem">
+        <div className="problem-grid">
+          <div>
+            <h2>The problem</h2>
+            <p className="lead">
+              Every CRM needs custom follow-up logic — “nudge leads who went
+              quiet”, “flag deals stuck in stage two”. But building that
+              means hiring developers, waiting weeks, and praying the
+              automation doesn&apos;t corrupt your data.
+            </p>
           </div>
-          <div className="step">
-            <div className="num">2</div>
-            <h3>Generate &amp; test</h3>
-            <p>The system writes the tool, runs it in a locked-down container, and repairs failures — up to three attempts.</p>
-          </div>
-          <div className="step">
-            <div className="num">3</div>
-            <h3>Activate &amp; run</h3>
-            <p>You review the tested version, activate it, and invoke it any time. Roll back to the previous version anytime.</p>
+          <div className="solution">
+            <h2>The agent does it for you</h2>
+            <p className="lead">
+              You describe the rule once. The agent writes the code, tests it
+              in isolation, repairs its own mistakes, and hands you a
+              versioned tool you can activate — or roll back — in seconds.
+            </p>
           </div>
         </div>
       </section>
 
+      <section className="section" id="how">
+        <h2>From sentence to running tool</h2>
+        <p className="lead">Five steps. You only do the first and the last.</p>
+        <div className="pipeline">
+          {PIPELINE.map(([title, text], i) => (
+            <div className="pipe-step" key={title}>
+              <div className="pipe-num">{i + 1}</div>
+              <h3>{title}</h3>
+              <p>{text}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
       <section className="section" id="features">
-        <h2>What&apos;s inside</h2>
-        <p className="lead">A real CRM first — leads, companies, activities, and follow-up tasks — plus the AI tool pipeline.</p>
+        <h2>Built for trust, not just speed</h2>
+        <p className="lead">Agents are only useful if you can verify what they did. Every step is inspectable.</p>
         <div className="features">
           <div className="feature">
             <div className="ico">L</div>
@@ -99,14 +121,14 @@ function Landing() {
             <div className="ico">Q</div>
             <div>
               <h3>Isolated QA</h3>
-              <p>Generated code runs in a network-less Docker sandbox with no keys, no database, and hard limits.</p>
+              <p>Generated code runs in a network-less Docker sandbox — no keys, no database, hard limits.</p>
             </div>
           </div>
           <div className="feature">
             <div className="ico">V</div>
             <div>
               <h3>Versioned tools</h3>
-              <p>Every passing version is immutable. Activate or roll back with one click — in-flight runs keep their version.</p>
+              <p>Every passing version is immutable. Activate or roll back with one click.</p>
             </div>
           </div>
           <div className="feature">
@@ -137,8 +159,8 @@ function Landing() {
 
       <section className="cta-band">
         <div className="section">
-          <h2>Ready to see it work?</h2>
-          <p>Sign in with your invited account and generate your first tool.</p>
+          <h2>Your next CRM automation is one sentence away.</h2>
+          <p>Sign in with your invited account and watch the agent work.</p>
           <a className="button big" href="/login">Launch demo</a>
         </div>
       </section>
