@@ -13,18 +13,138 @@ import './style.css'
 
 function Landing() {
   return (
-    <main>
-      <p className="eyebrow">Autonomous Agentic OS</p>
-      <h1>Turn a CRM task into a working tool.</h1>
-      <p>
-        Describe a follow-up workflow in plain English. The prototype generates,
-        tests, and runs CRM tools against sample data.
-      </p>
-      <p>
-        <a className="button" href="/workspace">Open prototype workspace</a>{' '}
-        <a href="/login">Sign in</a>
-      </p>
-    </main>
+    <div className="landing">
+      <nav className="topnav" aria-label="Main">
+        <a className="brandmark" href="/"><span className="dot" />Agentic OS</a>
+        <div className="links">
+          <a href="#how">How it works</a>
+          <a href="#features">Features</a>
+          <a href="#faq">FAQ</a>
+          <a className="button" href="/login">Sign in</a>
+        </div>
+      </nav>
+
+      <header className="hero">
+        <p className="eyebrow">Autonomous Agentic OS</p>
+        <h1>Turn a CRM task into a working tool.</h1>
+        <p className="sub">
+          Describe a follow-up workflow in plain English. The system generates
+          Python, tests it in an isolated sandbox, repairs failures, and runs it
+          against your CRM data — with versioned rollback.
+        </p>
+        <div className="ctas">
+          <a className="button big" href="/login">Launch demo</a>
+          <a className="button big secondary" href="#how">See how it works</a>
+        </div>
+
+        <div className="preview" aria-hidden="true">
+          <div className="bar"><i /><i /><i /></div>
+          <div className="mock">
+            <div className="side">
+              <i className="on" /><i /><i /><i /><i />
+            </div>
+            <div className="body">
+              <div className="kpis">
+                <div className="kpi"><b>30</b><span>Leads</span></div>
+                <div className="kpi"><b>8</b><span>Companies</span></div>
+                <div className="kpi"><b>13</b><span>Open tasks</span></div>
+              </div>
+              <table>
+                <thead><tr><th>Lead</th><th>Stage</th><th>Last contact</th></tr></thead>
+                <tbody>
+                  <tr><td>Noah Weber</td><td><span className="badge gray">lost</span></td><td>Oct 18</td></tr>
+                  <tr><td>Ava Okafor</td><td><span className="badge blue">contacted</span></td><td>Oct 13</td></tr>
+                  <tr><td>Priya Nair</td><td><span className="badge green">qualified</span></td><td>Nov 10</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <section className="section" id="how">
+        <h2>How it works</h2>
+        <p className="lead">Three steps from a sentence to a running CRM tool.</p>
+        <div className="steps">
+          <div className="step">
+            <div className="num">1</div>
+            <h3>Describe</h3>
+            <p>Write the workflow in plain English — e.g. “find leads idle for seven days and create a follow-up task”.</p>
+          </div>
+          <div className="step">
+            <div className="num">2</div>
+            <h3>Generate &amp; test</h3>
+            <p>The system writes the tool, runs it in a locked-down container, and repairs failures — up to three attempts.</p>
+          </div>
+          <div className="step">
+            <div className="num">3</div>
+            <h3>Activate &amp; run</h3>
+            <p>You review the tested version, activate it, and invoke it any time. Roll back to the previous version anytime.</p>
+          </div>
+        </div>
+      </section>
+
+      <section className="section" id="features">
+        <h2>What&apos;s inside</h2>
+        <p className="lead">A real CRM first — leads, companies, activities, and follow-up tasks — plus the AI tool pipeline.</p>
+        <div className="features">
+          <div className="feature">
+            <div className="ico">L</div>
+            <div>
+              <h3>Lead follow-up engine</h3>
+              <p>Find stale leads, draft follow-ups, and track every task back to its source lead.</p>
+            </div>
+          </div>
+          <div className="feature">
+            <div className="ico">Q</div>
+            <div>
+              <h3>Isolated QA</h3>
+              <p>Generated code runs in a network-less Docker sandbox with no keys, no database, and hard limits.</p>
+            </div>
+          </div>
+          <div className="feature">
+            <div className="ico">V</div>
+            <div>
+              <h3>Versioned tools</h3>
+              <p>Every passing version is immutable. Activate or roll back with one click — in-flight runs keep their version.</p>
+            </div>
+          </div>
+          <div className="feature">
+            <div className="ico">K</div>
+            <div>
+              <h3>Bring your own key</h3>
+              <p>One sponsored AI task per account; afterwards use your own OpenRouter key, held in memory only.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="section faq" id="faq">
+        <h2>Questions</h2>
+        <details>
+          <summary>Do I need my own API key?</summary>
+          <p>Each invited account gets one sponsored AI generation task. After that, you can attach your own OpenRouter key for the session — it is never saved to the database or sent to generated-code containers.</p>
+        </details>
+        <details>
+          <summary>Is this a finished product?</summary>
+          <p>No — it&apos;s an internship prototype. It runs against sample CRM data in a single demo workspace. Public multi-tenant hardening is deliberately out of scope.</p>
+        </details>
+        <details>
+          <summary>Where does my data live?</summary>
+          <p>In a managed Postgres database (Neon). Generated tools receive a read-only snapshot and can only propose fixed CRM operations, which the server validates before writing.</p>
+        </details>
+      </section>
+
+      <section className="cta-band">
+        <div className="section">
+          <h2>Ready to see it work?</h2>
+          <p>Sign in with your invited account and generate your first tool.</p>
+          <a className="button big" href="/login">Launch demo</a>
+        </div>
+      </section>
+
+      <footer>Autonomous Agentic OS — internship prototype. Sample data only.</footer>
+    </div>
   )
 }
 
@@ -52,9 +172,9 @@ function Login({ onDone }) {
   }
 
   return (
-    <main>
+    <main className="auth">
       <h1>Sign in</h1>
-      <p>Invite-only demo workspace. Use the account credentials you were given.</p>
+      <p className="muted">Invite-only demo workspace. Use the account credentials you were given.</p>
       <form onSubmit={submit} className="card">
         <label>
           Email
@@ -115,7 +235,7 @@ function ChangePassword({ onDone }) {
   }
 
   return (
-    <main>
+    <main className="auth">
       <h1>Set a new password</h1>
       <p>Your account requires a password change before continuing.</p>
       <form onSubmit={submit} className="card">
@@ -144,6 +264,18 @@ function ChangePassword({ onDone }) {
 function ErrorNote({ error }) {
   if (!error) return null
   return <p role="alert" className="error">{error}</p>
+}
+
+const BADGE_TONES = {
+  new: 'gray', contacted: 'blue', qualified: 'green', customer: 'green', lost: 'red',
+  open: 'amber', done: 'green', cancelled: 'gray',
+  passed: 'green', failed: 'red', active: 'green', draft: 'gray', retired: 'gray',
+  awaiting_activation: 'amber', generating: 'blue', testing: 'blue', repairing: 'amber',
+  queued: 'gray', needs_key: 'amber', succeeded: 'green',
+}
+
+function StatusBadge({ value }) {
+  return <span className={`badge ${BADGE_TONES[value] || 'gray'}`}>{value}</span>
 }
 
 function LeadForm({ companies, onCreated }) {
@@ -427,7 +559,7 @@ function LeadsView({ companies, refreshKey, onChanged }) {
                 <td>{l.name}</td>
                 <td>{l.email}</td>
                 <td>{l.company_name || '—'}</td>
-                <td>{l.stage}</td>
+                <td><StatusBadge value={l.stage} /></td>
                 <td>{fmtDate(l.last_contact_date)}</td>
                 <td>{l.value ? `${l.value} ${l.currency}` : '—'}</td>
               </tr>
@@ -628,7 +760,7 @@ function TasksView({ refreshKey, leads }) {
                 <td className={t.status === 'done' ? 'done' : ''}>{t.title}</td>
                 <td>{t.lead_id ? leadName(t.lead_id) : '—'}</td>
                 <td>{fmtDate(t.due_date)}</td>
-                <td>{t.status}</td>
+                <td><StatusBadge value={t.status} /></td>
                 <td>
                   {t.status !== 'done' && (
                     <button onClick={() => setTaskStatus(t, 'done')}>Mark done</button>
@@ -815,7 +947,7 @@ function RunRow({ run, selected, onSelect }) {
     <tr className={selected ? 'selected' : ''} onClick={() => onSelect(run.id)}>
       <td>{run.kind === 'generate' ? 'Generate' : 'Invoke'}</td>
       <td className="muted">{(run.prompt || run.id).slice(0, 60)}</td>
-      <td>{run.status}</td>
+      <td><StatusBadge value={run.status} /></td>
       <td>{run.attempt_count ?? 0}/3</td>
       <td className="muted">{fmtDateTime(run.created_at)}</td>
     </tr>
@@ -1096,7 +1228,7 @@ function ToolsPanel({ onInvoked }) {
                 {versions.map((v) => (
                   <tr key={v.id}>
                     <td>v{v.version}</td>
-                    <td>{v.status}</td>
+                    <td><StatusBadge value={v.status} /></td>
                     <td className="muted">{(v.source_hash || '').slice(0, 12)}…</td>
                     <td className="muted">{fmtDateTime(v.created_at)}</td>
                     <td>
@@ -1181,10 +1313,10 @@ function Workspace() {
     window.location.href = '/'
   }
 
-  if (authState === 'loading') return <main><p>Loading…</p></main>
+  if (authState === 'loading') return <main className="auth"><p>Loading…</p></main>
   if (authState === 'anon') {
     return (
-      <main>
+      <main className="auth">
         <h1>Prototype workspace</h1>
         <p>You need to sign in first.</p>
         <p><a className="button" href="/login">Sign in</a></p>
@@ -1195,25 +1327,39 @@ function Workspace() {
     return <ChangePassword onDone={() => window.location.reload()} />
   }
 
+  const tabs = [
+    ['leads', 'Leads'],
+    ['companies', 'Companies'],
+    ['tasks', 'Tasks'],
+    ['runs', 'AI runs'],
+    ['tools', 'Tools'],
+    ['search', 'Search'],
+  ]
+  const tabLabel = tabs.find(([k]) => k === tab)?.[1] || 'Workspace'
+
   return (
-    <main className="workspace">
-      <header className="workspace-header">
-        <div>
-          <p className="eyebrow">Autonomous Agentic OS</p>
-          <h1>Workspace</h1>
-        </div>
-        <div className="row">
-          <span className="muted">{me.email} · {me.workspace_slug}</span>
-          <button onClick={logout}>Sign out</button>
-        </div>
-      </header>
-      <nav className="tabs">
-        {[['leads', 'Leads'], ['companies', 'Companies'], ['tasks', 'Tasks'], ['runs', 'AI runs'], ['tools', 'Tools'], ['search', 'Search']].map(([key, label]) => (
-          <button key={key} className={tab === key ? 'tab active' : 'tab'}
+    <div className="app">
+      <aside className="sidenav">
+        <a className="brandmark" href="/"><span className="dot" />Agentic OS</a>
+        {tabs.map(([key, label]) => (
+          <button key={key} className={tab === key ? 'active' : ''}
             onClick={() => setTab(key)}>{label}</button>
         ))}
-      </nav>
-      {tab === 'leads' && (
+        <div className="spacer" />
+        <div className="who">
+          <div>{me.email}</div>
+          <div className="muted-nav">{me.workspace_slug} workspace</div>
+          <button onClick={logout}>Sign out</button>
+        </div>
+      </aside>
+      <div className="maincol">
+        <div className="topbar">
+          <span className="appname">CRM Workspace</span>
+          <span className="me">{me.workspace_slug}</span>
+        </div>
+        <div className="content">
+          <h1>{tabLabel}</h1>
+          {tab === 'leads' && (
         <LeadsView companies={companies} refreshKey={refreshKey}
           onChanged={() => setRefreshKey((k) => k + 1)} />
       )}
@@ -1231,9 +1377,11 @@ function Workspace() {
       {tab === 'tools' && (
         <ToolsPanel onInvoked={(id) => { setSelectedRunId(id); setTab('runs') }} />
       )}
-      {tab === 'search' && <SearchView />}
-      {tab === 'runs' && <UsagePanel />}
-    </main>
+          {tab === 'search' && <SearchView />}
+          {tab === 'runs' && <UsagePanel />}
+        </div>
+      </div>
+    </div>
   )
 }
 
