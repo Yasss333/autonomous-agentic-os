@@ -686,6 +686,470 @@ function SearchView() {
   )
 }
 
+function ByokModal({ onClose, onDone }) {
+  const [key, setKey] = useState('')
+  const [error, setError] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [agreed, setAgreed] = useState(false)
+
+  async function submit(event) {
+    event.preventDefault()
+    if (!agreed) { setError('Please confirm the session-key agreement'); return }
+    setBusy(true)
+    setError('')
+    try {
+      await api('/session/provider-key', { method: 'POST', body: { api_key: key } })
+      setKey('')
+      onDone()
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Could not attach key')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <div className="modal-backdrop" role="dialog" aria-modal="true">
+      <div className="card modal">
+        <h2>Your included AI task has been used</h2>
+        <p>Please enter your own OpenRouter API key to continue.</p>
+        <p className="muted">Your key is used only for this session and is not saved in our database.</p>
+        <form onSubmit={submit} className="form-grid">
+          <label>
+            OpenRouter API key
+            <input type="password" required autoComplete="off" value={key}
+              onChange={(e) => setKey(e.target.value)} />
+          </label>
+          <label className="check">
+            <input type="checkbox" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} />{' '}
+            I agree that my key will be used to send my requests to OpenRouter and its
+            selected provider. This app keeps the key only in temporary memory while
+            needed. It does not intentionally write my key to the database, logs,
+            browser storage, or generated-code containers. Provider data policies
+            still apply.
+          </label>
+          <ErrorNote error={error} />
+          <div className="row">
+            <button className="button" disabled={busy}>{busy ? 'Attaching…' : 'Continue'}</button>
+            <button type="button" onClick={onClose}>Cancel</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  )
+}
+
+const ACTIVE_RUN_STATES = new Set(['queued', 'needs_key', 'generating', 'testing', 'repairing'])
+
+function RunCreator({ onCreated, sponsoredUsed, runnerOnline }) {
+  const [prompt, setPrompt] = useState('')
+  const [mode, setMode] = useState('sponsored')
+  const [error, setError] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [showKey, setShowKey] = useState(false)
+
+  async function submit(event) {
+    event.preventDefault()
+    setBusy(true)
+    setError('')
+    try {
+      const result = await api('/runs', {
+        method: 'POST',
+        body: {
+          prompt,
+          credential_mode: mode,
+          idempotency_key: crypto.randomUUID(),
+        },
+      })
+      setPrompt('')
+      onCreated(result.run_id)
+    } catch (err) {
+      if (err instanceof ApiError && (err.status === 402 || err.status === 409)) {
+        setShowKey(true)
+      } else {
+        setError(err instanceof ApiError ? err.message : 'Could not start run')
+      }
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <section className="card">
+      <h2>Describe a CRM tool</h2>
+      <form onSubmit={submit} className="form-grid">
+        <label>
+          What should the tool do?
+          <textarea required rows={3} value={prompt} onChange={(e) => setPrompt(e.target.value)}
+            placeholder="e.g. Find leads with no activity for seven days and create a follow-up task" />
+        </label>
+        <label>
+          AI credits
+          <select value={mode} onChange={(e) => setMode(e.target.value)}>
+            <option value="sponsored" disabled={sponsoredUsed}>
+              Sponsored task{ sponsoredUsed ? ' (used)' : '' }
+            </option>
+            <option value="byok">My OpenRouter key (this session)</option>
+          </select>
+        </label>
+        {!runnerOnline && <p className="error">Runner is offline — start the laptop worker to generate tools.</p>}
+        <ErrorNote error={error} />
+        <div className="row">
+          <button className="button" disabled={busy || !runnerOnline}>
+            {busy ? 'Starting…' : 'Generate tool'}
+          </button>
+        </div>
+      </form>
+      {showKey && (
+        <ByokModal
+          onClose={() => setShowKey(false)}
+          onDone={() => { setShowKey(false); setMode('byok'); submit({ preventDefault() {} }) }}
+        />
+      )}
+    </section>
+  )
+}
+
+function RunRow({ run, selected, onSelect }) {
+  return (
+    <tr className={selected ? 'selected' : ''} onClick={() => onSelect(run.id)}>
+      <td>{run.kind === 'generate' ? 'Generate' : 'Invoke'}</td>
+      <td className="muted">{(run.prompt || run.id).slice(0, 60)}</td>
+      <td>{run.status}</td>
+      <td>{run.attempt_count ?? 0}/3</td>
+      <td className="muted">{fmtDateTime(run.created_at)}</td>
+    </tr>
+  )
+}
+
+function RunDetail({ runId, tools, onChanged }) {
+  const [run, setRun] = useState(null)
+  const [error, setError] = useState('')
+  const [activating, setActivating] = useState(false)
+
+  const load = useCallback(async () => {
+    try {
+      setRun(await api(`/runs/${runId}`))
+      setError('')
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Could not load run')
+    }
+  }, [runId])
+
+  useEffect(() => {
+    load()
+    const timer = setInterval(() => {
+      setRun((current) => {
+        if (current && !ACTIVE_RUN_STATES.has(current.status)) return current
+        load()
+        return current
+      })
+    }, 2000)
+    return () => clearInterval(timer)
+  }, [load])
+
+  if (error) return <ErrorNote error={error} />
+  if (!run) return <p>Loading run…</p>
+
+  const terminal = !ACTIVE_RUN_STATES.has(run.status)
+  const toolName = run.tool_version_id
+    ? (tools.versions || []).find((v) => v.id === run.tool_version_id)?.name
+    : null
+  const toolVersion = run.tool_version_id
+    ? (tools.versions || []).find((v) => v.id === run.tool_version_id)?.version
+    : null
+
+  async function activate() {
+    if (!toolName || toolVersion == null) return
+    setActivating(true)
+    try {
+      await api(`/tools/${toolName}/activate`, {
+        method: 'POST',
+        body: { version: toolVersion },
+      })
+      onChanged()
+      load()
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Activation failed')
+    } finally {
+      setActivating(false)
+    }
+  }
+
+  async function cancel() {
+    try {
+      await api(`/runs/${runId}/cancel`, { method: 'POST' })
+      load()
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Cancel failed')
+    }
+  }
+
+  return (
+    <section className="card">
+      <h2>Run {run.id.slice(0, 8)} — {run.status}</h2>
+      {run.prompt && <p>{run.prompt}</p>}
+      <p className="muted">
+        kind={run.kind} · mode={run.credential_mode} · attempts={run.attempt_count}/3
+        {run.error_code ? ` · error=${run.error_code}` : ''}
+      </p>
+      {!terminal && (
+        <div className="row">
+          <button onClick={cancel}>Cancel run</button>
+        </div>
+      )}
+      {run.status === 'awaiting_activation' && toolName && (
+        <div className="row">
+          <button className="button" onClick={activate} disabled={activating}>
+            {activating ? 'Activating…' : `Activate ${toolName} v${toolVersion}`}
+          </button>
+          <span className="muted">QA passed — review the tool, then activate.</span>
+        </div>
+      )}
+      {run.status === 'needs_key' && (
+        <p className="error">This run needs a provider key. Attach one below, then start a new run.</p>
+      )}
+      {run.kind === 'tool_invoke' && run.bundle?.display && (
+        <div>
+          <h3>Result</h3>
+          <pre className="json">{JSON.stringify(run.bundle.display, null, 2)}</pre>
+          {run.bundle.operations_result && (
+            <p className="muted">Applied {run.bundle.operations_result.count} operation(s)</p>
+          )}
+        </div>
+      )}
+      <h3>Timeline</h3>
+      <ul className="plain timeline">
+        {(run.events || []).map((e) => (
+          <li key={e.seq}>
+            <span className="muted">#{e.seq}</span> <strong>{e.kind}</strong>{' '}
+            <span className="muted">{fmtDateTime(e.created_at)}</span>
+            {e.payload && Object.keys(e.payload).length > 0 && (
+              <pre className="json inline">{JSON.stringify(e.payload)}</pre>
+            )}
+          </li>
+        ))}
+      </ul>
+    </section>
+  )
+}
+
+function RunsPanel({ tools, refreshKey, onToolsChanged, selectedRunId, onSelectRun }) {
+  const [runs, setRuns] = useState([])
+  const [statusInfo, setStatusInfo] = useState(null)
+  const [error, setError] = useState('')
+  const [showKey, setShowKey] = useState(false)
+
+  const load = useCallback(async () => {
+    try {
+      const data = await api('/runs?limit=20')
+      setRuns(data.items)
+      setError('')
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Could not load runs')
+    }
+    try {
+      setStatusInfo(await api('/status'))
+    } catch {}
+  }, [])
+
+  useEffect(() => {
+    load()
+    const timer = setInterval(load, 3000)
+    return () => clearInterval(timer)
+  }, [load, refreshKey])
+
+  return (
+    <div>
+      {statusInfo && (
+        <p className={statusInfo.runner_online ? 'muted' : 'error'}>
+          Runner: {statusInfo.runner_online ? 'online' : 'offline'}
+          {' · '}Sponsored task: {statusInfo.sponsored_task_used ? 'used' : 'available'}
+        </p>
+      )}
+      <RunCreator
+        sponsoredUsed={statusInfo?.sponsored_task_used}
+        runnerOnline={statusInfo?.runner_online}
+        onCreated={(id) => { load(); onSelectRun(id) }}
+      />
+      {showKey && (
+        <ByokModal onClose={() => setShowKey(false)} onDone={() => { setShowKey(false); load() }} />
+      )}
+      <button className="linklike" onClick={() => setShowKey(true)}>Attach OpenRouter key for this session</button>
+      <ErrorNote error={error} />
+      {runs.length > 0 && (
+        <table>
+          <thead><tr><th>Type</th><th>Prompt</th><th>Status</th><th>Attempts</th><th>Created</th></tr></thead>
+          <tbody>
+            {runs.map((r) => <RunRow key={r.id} run={r} selected={selectedRunId === r.id} onSelect={onSelectRun} />)}
+          </tbody>
+        </table>
+      )}
+      {runs.length === 0 && <p className="muted">No runs yet.</p>}
+      {selectedRunId && (
+        <RunDetail runId={selectedRunId} tools={tools} onChanged={() => { load(); onToolsChanged() }} />
+      )}
+    </div>
+  )
+}
+
+function ToolInvokeForm({ name, onInvoked }) {
+  const [open, setOpen] = useState(false)
+  const [inputText, setInputText] = useState('{}')
+  const [error, setError] = useState('')
+  const [busy, setBusy] = useState(false)
+
+  async function submit(event) {
+    event.preventDefault()
+    let input
+    try {
+      input = JSON.parse(inputText || '{}')
+    } catch {
+      setError('Input must be valid JSON')
+      return
+    }
+    setBusy(true)
+    setError('')
+    try {
+      const res = await api(`/tools/${name}/invoke`, {
+        method: 'POST',
+        body: { input, idempotency_key: crypto.randomUUID() },
+      })
+      setOpen(false)
+      onInvoked(res.run_id)
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Invoke failed')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  if (!open) return <button onClick={() => setOpen(true)}>Run tool</button>
+  return (
+    <form onSubmit={submit} className="card form-grid">
+      <h3>Run {name}</h3>
+      <label>
+        Input (JSON)
+        <textarea rows={3} value={inputText} onChange={(e) => setInputText(e.target.value)} />
+      </label>
+      <ErrorNote error={error} />
+      <div className="row">
+        <button className="button" disabled={busy}>{busy ? 'Starting…' : 'Execute'}</button>
+        <button type="button" onClick={() => setOpen(false)}>Cancel</button>
+      </div>
+    </form>
+  )
+}
+
+function ToolsPanel({ onInvoked }) {
+  const [data, setData] = useState({ tools: [], versions: [] })
+  const [error, setError] = useState('')
+
+  const load = useCallback(async () => {
+    try {
+      setData(await api('/tools'))
+      setError('')
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Could not load tools')
+    }
+  }, [])
+
+  useEffect(() => { load() }, [load])
+
+  async function act(name, version) {
+    try {
+      await api(`/tools/${name}/activate`, { method: 'POST', body: { version } })
+      load()
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Activation failed')
+    }
+  }
+
+  async function rollback(name) {
+    try {
+      await api(`/tools/${name}/rollback`, { method: 'POST', body: {} })
+      load()
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Rollback failed')
+    }
+  }
+
+  const byName = {}
+  for (const v of data.versions) (byName[v.name] ||= []).push(v)
+
+  return (
+    <div>
+      <ErrorNote error={error} />
+      {data.tools.length === 0 && <p className="muted">No tools yet. Generate one from the AI runs tab.</p>}
+      {data.tools.map((t) => {
+        const versions = byName[t.name] || []
+        return (
+          <section className="card" key={t.name}>
+            <h2>{t.name}</h2>
+            <p className="muted">
+              Active: {t.active_version ? `v${t.active_version}` : 'none'}
+              {t.active_status ? ` (${t.active_status})` : ''}
+            </p>
+            <table>
+              <thead><tr><th>Version</th><th>Status</th><th>Hash</th><th>Created</th><th></th></tr></thead>
+              <tbody>
+                {versions.map((v) => (
+                  <tr key={v.id}>
+                    <td>v{v.version}</td>
+                    <td>{v.status}</td>
+                    <td className="muted">{(v.source_hash || '').slice(0, 12)}…</td>
+                    <td className="muted">{fmtDateTime(v.created_at)}</td>
+                    <td>
+                      {v.status === 'passed' && t.active_version !== v.version && (
+                        <button onClick={() => act(t.name, v.version)}>Activate</button>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <div className="row">
+              {t.active_version != null && <button onClick={() => rollback(t.name)}>Rollback to previous</button>}
+              {t.active_version != null && <ToolInvokeForm name={t.name} onInvoked={onInvoked} />}
+            </div>
+          </section>
+        )
+      })}
+    </div>
+  )
+}
+
+function UsagePanel() {
+  const [data, setData] = useState(null)
+  useEffect(() => {
+    api('/tools/usage/today').then(setData).catch(() => setData({ items: [] }))
+  }, [])
+  if (!data) return null
+  return (
+    <section className="card">
+      <h2>Today&apos;s AI usage</h2>
+      {data.items.length === 0 && <p className="muted">No model calls recorded today.</p>}
+      {data.items.length > 0 && (
+        <table>
+          <thead><tr><th>Model</th><th>Payer</th><th>Calls</th><th>Input tok</th><th>Output tok</th><th>Cost</th></tr></thead>
+          <tbody>
+            {data.items.map((u, i) => (
+              <tr key={i}>
+                <td>{u.model_id}</td>
+                <td>{u.payer}</td>
+                <td>{u.calls}</td>
+                <td>{u.input_tokens}</td>
+                <td>{u.output_tokens}</td>
+                <td>{u.cost_usd != null ? `$${Number(u.cost_usd).toFixed(4)}` : (u.all_cost_known ? '$0.00' : 'unknown')}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+    </section>
+  )
+}
+
 function Workspace() {
   const [me, setMe] = useState(null)
   const [authState, setAuthState] = useState('loading') // loading | anon | needs_password | ready
@@ -693,6 +1157,8 @@ function Workspace() {
   const [refreshKey, setRefreshKey] = useState(0)
   const [companies, setCompanies] = useState([])
   const [leads, setLeads] = useState([])
+  const [toolsData, setToolsData] = useState({ tools: [], versions: [] })
+  const [selectedRunId, setSelectedRunId] = useState(null)
 
   useEffect(() => {
     api('/me')
@@ -707,6 +1173,7 @@ function Workspace() {
     if (authState !== 'ready') return
     api('/crm/companies?limit=100').then((d) => setCompanies(d.items)).catch(() => {})
     api('/crm/leads?limit=100').then((d) => setLeads(d.items)).catch(() => {})
+    api('/tools').then(setToolsData).catch(() => {})
   }, [authState])
 
   async function logout() {
@@ -741,7 +1208,7 @@ function Workspace() {
         </div>
       </header>
       <nav className="tabs">
-        {[['leads', 'Leads'], ['companies', 'Companies'], ['tasks', 'Tasks'], ['search', 'Search']].map(([key, label]) => (
+        {[['leads', 'Leads'], ['companies', 'Companies'], ['tasks', 'Tasks'], ['runs', 'AI runs'], ['tools', 'Tools'], ['search', 'Search']].map(([key, label]) => (
           <button key={key} className={tab === key ? 'tab active' : 'tab'}
             onClick={() => setTab(key)}>{label}</button>
         ))}
@@ -752,7 +1219,20 @@ function Workspace() {
       )}
       {tab === 'companies' && <CompaniesView refreshKey={refreshKey} />}
       {tab === 'tasks' && <TasksView refreshKey={refreshKey} leads={leads} />}
+      {tab === 'runs' && (
+        <RunsPanel
+          tools={toolsData}
+          refreshKey={refreshKey}
+          onToolsChanged={() => api('/tools').then(setToolsData).catch(() => {})}
+          selectedRunId={selectedRunId}
+          onSelectRun={setSelectedRunId}
+        />
+      )}
+      {tab === 'tools' && (
+        <ToolsPanel onInvoked={(id) => { setSelectedRunId(id); setTab('runs') }} />
+      )}
       {tab === 'search' && <SearchView />}
+      {tab === 'runs' && <UsagePanel />}
     </main>
   )
 }

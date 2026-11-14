@@ -90,3 +90,34 @@ tbody tr.selected { background: #e3efe4; }
 .plain li { padding: .35rem 0; border-bottom: 1px solid #eef2ec; }
 .row-form { display: flex; gap: .5rem; margin: .6rem 0 1.2rem; flex-wrap: wrap; }
 .row-form input { flex: 1; min-width: 12rem; }
+
+textarea {
+  font: inherit;
+  padding: .45rem .6rem;
+  border: 1px solid #b9c8ba;
+  border-radius: .35rem;
+  background: #fff;
+  color: inherit;
+  width: 100%;
+  box-sizing: border-box;
+}
+label.check { display: flex; gap: .5rem; align-items: flex-start; font-size: .85rem; }
+label.check input { margin-top: .3rem; }
+
+.modal-backdrop {
+  position: fixed; inset: 0; background: rgba(15, 30, 20, .45);
+  display: flex; align-items: center; justify-content: center; padding: 1rem; z-index: 50;
+}
+.modal { max-width: 34rem; width: 100%; margin: 0; }
+.linklike {
+  background: none; border: 0; color: #195336; font: inherit;
+  text-decoration: underline; cursor: pointer; padding: 0;
+}
+.json {
+  background: #f4f8f2; border: 1px solid #e4ebe2; border-radius: .4rem;
+  padding: .6rem .8rem; font-size: .8rem; overflow-x: auto; white-space: pre-wrap;
+  word-break: break-word; max-height: 16rem; overflow-y: auto;
+}
+.json.inline { display: inline-block; margin: .2rem 0 0 .4rem; max-height: 8rem; }
+.timeline li { padding: .3rem 0; }
+td button, .row button { font-size: .9rem; }

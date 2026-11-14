@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "tool-bundle.schema.json",
+  "title": "ToolBundle",
+  "description": "Bundle produced by the generator and validated before QA. source_code defines handle(input, context) returning {display, operations}.",
+  "type": "object",
+  "required": ["schema_version", "name", "description", "source_code", "entry_point", "input_schema", "output_schema", "ui_spec", "allowed_operations"],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "name": { "type": "string", "pattern": "^[a-z][a-z0-9_]{1,60}$" },
+    "description": { "type": "string", "maxLength": 1000 },
+    "source_code": { "type": "string", "maxLength": 65536 },
+    "entry_point": { "const": "handle" },
+    "input_schema": { "type": "object" },
+    "output_schema": { "type": "object" },
+    "ui_spec": {
+      "type": "object",
+      "properties": {
+        "components": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["type"],
+            "properties": {
+              "type": { "enum": ["heading", "text", "number", "date", "select", "table", "badge"] }
+            }
+          }
+        }
+      }
+    },
+    "allowed_operations": {
+      "type": "array",
+      "items": { "enum": ["create_followup_task", "add_activity", "update_lead_stage"] },
+      "minItems": 1
+    },
+    "tests": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "code"],
+        "properties": {
+          "name": { "type": "string" },
+          "code": { "type": "string", "description": "Python source defining run(result, tool)" }
+        }
+      }
+    },
+    "qa_inputs": { "type": "array", "items": { "type": "object" } }
+  },
+  "additionalProperties": true
+}

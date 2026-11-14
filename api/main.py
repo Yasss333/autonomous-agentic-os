@@ -4,13 +4,17 @@ from fastapi.exceptions import RequestValidationError
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from . import db, deps
-from .routers import auth, crm
+from .routers import auth, crm, runs, session_keys, tools, worker
 from .schemas import ErrorResponse, MeResponse
 
 app = FastAPI(title="Autonomous Agentic OS", version="0.1.0")
 
 app.include_router(auth.router, prefix="/api")
 app.include_router(crm.router, prefix="/api")
+app.include_router(runs.router, prefix="/api")
+app.include_router(session_keys.router, prefix="/api")
+app.include_router(tools.router, prefix="/api")
+app.include_router(worker.router, prefix="/api")
 
 
 @app.get("/api/health")
@@ -21,6 +25,25 @@ def health() -> dict[str, str]:
 @app.get("/api/me", response_model=MeResponse)
 def me(user=Depends(deps.current_user)):
     return deps.me_response(user)
+
+
+@app.get("/api/status")
+def status(user: deps.CurrentUser = Depends(deps.current_user), conn=Depends(deps.get_conn)):
+    from . import run_store
+    from psycopg.rows import dict_row
+
+    deps.require_password_changed(user)
+    with conn.cursor(row_factory=dict_row) as cur:
+        cur.execute(
+            "SELECT sponsored_used_at FROM demo_allowances WHERE user_id = %s",
+            (user.id,),
+        )
+        row = cur.fetchone()
+    return {
+        "runner_online": run_store.runner_online(conn),
+        "sponsored_task_used": bool(row and row["sponsored_used_at"]),
+        "database": "ok",
+    }
 
 
 @app.exception_handler(StarletteHTTPException)

@@ -5,3 +5,5 @@ psycopg-pool
 pwdlib[argon2]
 email-validator
 python-dotenv
+litellm
+langgraph

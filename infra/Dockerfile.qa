@@ -1,0 +1,7 @@
+FROM python:3.13-slim
+
+# Trusted QA/invocation harness image. No package installs at runtime;
+# generated code runs against this fixed image only.
+COPY qa_harness.py /harness.py
+ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
+ENTRYPOINT ["python", "/harness.py"]

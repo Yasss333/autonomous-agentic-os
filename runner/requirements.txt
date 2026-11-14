@@ -1,0 +1,5 @@
+# Trusted laptop worker dependencies. The worker uses only the stdlib for
+# HTTP and the docker CLI for sandboxes; these cover the AI workflow.
+# Install into the project venv: .venv/Scripts/pip.exe install -r runner/requirements.txt
+litellm
+langgraph

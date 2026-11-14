@@ -4,7 +4,7 @@ Read [README.md](README.md) and [the three-phase plan](docs/Three_Phase_Implemen
 
 ## Current state
 
-The starter contains a React/Vite landing shell and workspace, a fixed local API proxy, and a real FastAPI health route. See the README for the verified commands and remaining setup. The next slice is Phase 1: Neon migrations, seeded sample CRM data, and invited-account login. Then deliver one lead workflow through the UI and API before starting Phase 2.
+The starter contains a React/Vite landing shell and workspace, a fixed local API proxy, invite-only login, a Neon/Postgres schema with migrations and seeded CRM data, and a working CRM UI. Phase 2 is partially built: run creation with sponsored/BYOK credentials, outbound worker polling with leases, a LangGraph generate→QA→repair loop, a Docker sandbox harness, tool activation/rollback, and sandboxed invocation committing validated CRM operations. Verified end-to-end with RUNNER_FIXTURE=1 (no real model call yet). See README for commands. Remaining Phase 2: real OpenRouter verification, embeddings/semantic search, P2.16 failure matrix. Then Phase 3 hosting.
 
 ## Project decisions
 
