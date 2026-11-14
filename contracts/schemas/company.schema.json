@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "company.schema.json",
+  "title": "Company",
+  "type": "object",
+  "required": ["id", "type", "name", "version", "website", "industry", "created_at", "updated_at"],
+  "properties": {
+    "id": { "type": "string", "format": "uuid" },
+    "type": { "const": "company" },
+    "name": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "version": { "type": "integer", "minimum": 1 },
+    "website": { "type": ["string", "null"], "maxLength": 300 },
+    "industry": { "type": ["string", "null"], "maxLength": 120 },
+    "created_at": { "type": "string", "format": "date-time" },
+    "updated_at": { "type": "string", "format": "date-time" }
+  },
+  "additionalProperties": false
+}
