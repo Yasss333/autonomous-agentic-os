@@ -1,0 +1,62 @@
+{
+  "crm": {
+    "name": "CRM",
+    "description": "Manage prospects and spot leads that need a follow-up.",
+    "palette": "orange",
+    "reference": "http://127.0.0.1:4173/",
+    "referenceLabel": "Original Automation Studio",
+    "suggestion": "Show only qualified leads idle more than 7 days and sort by days idle.",
+    "entity": "Leads",
+    "fields": {"lead": "text", "company": "text", "stage": "text", "idleDays": "number", "value": "money"},
+    "labels": {"lead": "Lead", "company": "Company", "stage": "Stage", "idleDays": "Days idle", "value": "Deal value"},
+    "rows": [
+      {"lead": "Priya Sharma", "company": "Meridian Labs", "stage": "Qualified", "idleDays": 12, "value": 6400},
+      {"lead": "Jordan Lee", "company": "Copperline", "stage": "Contacted", "idleDays": 8, "value": 4800},
+      {"lead": "Ana Morales", "company": "Daylight Studio", "stage": "New", "idleDays": 7, "value": 2700},
+      {"lead": "Marcus Chen", "company": "Wavelength", "stage": "Qualified", "idleDays": 4, "value": 9200},
+      {"lead": "Aisha Patel", "company": "Fieldwork", "stage": "Contacted", "idleDays": 2, "value": 3100},
+      {"lead": "Elena Brooks", "company": "Kite Systems", "stage": "New", "idleDays": 1, "value": 3900}
+    ],
+    "initial": {"title": "Sales overview", "summary": "Track your pipeline and follow-up priorities.", "columns": ["lead", "company", "stage", "idleDays", "value"], "filters": [], "sort": null, "metrics": [{"label": "Total leads", "operation": "count", "field": null}, {"label": "Pipeline value", "operation": "sum", "field": "value"}, {"label": "Average days idle", "operation": "average", "field": "idleDays"}], "chart": {"label": "Pipeline by stage", "group": "stage", "field": "value"}}
+  },
+  "expenses": {
+    "name": "Expense Tracker",
+    "description": "Review spending, reimbursement status, and project costs.",
+    "palette": "blue",
+    "reference": "https://demo.shadcnstore.com/chronicle/",
+    "referenceLabel": "Original Chronicle dashboard",
+    "suggestion": "Create a pending reimbursement view and chart total spending by project.",
+    "entity": "Expenses",
+    "fields": {"expense": "text", "project": "text", "category": "text", "status": "text", "amount": "money"},
+    "labels": {"expense": "Expense", "project": "Project", "category": "Category", "status": "Status", "amount": "Amount"},
+    "rows": [
+      {"expense": "Figma renewal", "project": "Studio", "category": "Software", "status": "Reimbursed", "amount": 144},
+      {"expense": "Client workshop", "project": "Chronicle", "category": "Meals", "status": "Pending", "amount": 186},
+      {"expense": "Design conference", "project": "Studio", "category": "Travel", "status": "Approved", "amount": 720},
+      {"expense": "Train to partner office", "project": "Chronicle", "category": "Travel", "status": "Pending", "amount": 92},
+      {"expense": "Cloud hosting", "project": "Platform", "category": "Software", "status": "Approved", "amount": 340},
+      {"expense": "Team offsite venue", "project": "Platform", "category": "Events", "status": "Pending", "amount": 460}
+    ],
+    "initial": {"title": "Expense overview", "summary": "Review project spending and recent expenses.", "columns": ["expense", "project", "category", "status", "amount"], "filters": [], "sort": null, "metrics": [{"label": "Total spend", "operation": "sum", "field": "amount"}, {"label": "Expense reports", "operation": "count", "field": null}, {"label": "Average expense", "operation": "average", "field": "amount"}], "chart": {"label": "Spend by project", "group": "project", "field": "amount"}}
+  },
+  "inventory": {
+    "name": "Inventory Tracker",
+    "description": "Monitor available stock and decide what needs reordering.",
+    "palette": "purple",
+    "reference": "https://shadcn-admin.netlify.app/",
+    "referenceLabel": "Original Shadcn Admin dashboard",
+    "suggestion": "Show items below their reorder point and sort by lowest stock first.",
+    "entity": "Products",
+    "fields": {"product": "text", "sku": "text", "category": "text", "stock": "number", "reorderPoint": "number"},
+    "labels": {"product": "Product", "sku": "SKU", "category": "Category", "stock": "Stock", "reorderPoint": "Reorder point"},
+    "rows": [
+      {"product": "Keychron K2", "sku": "KEY-102", "category": "Peripherals", "stock": 4, "reorderPoint": 12},
+      {"product": "Studio Monitor 27", "sku": "MON-215", "category": "Displays", "stock": 18, "reorderPoint": 8},
+      {"product": "USB-C docking station", "sku": "DOC-340", "category": "Accessories", "stock": 8, "reorderPoint": 15},
+      {"product": "Desk microphone", "sku": "AUD-114", "category": "Audio", "stock": 24, "reorderPoint": 10},
+      {"product": "Braided USB-C cable", "sku": "CAB-451", "category": "Accessories", "stock": 64, "reorderPoint": 20},
+      {"product": "Wireless mouse", "sku": "MSE-201", "category": "Peripherals", "stock": 15, "reorderPoint": 15}
+    ],
+    "initial": {"title": "Inventory overview", "summary": "Track stock levels and replenishment thresholds.", "columns": ["product", "sku", "category", "stock", "reorderPoint"], "filters": [], "sort": null, "metrics": [{"label": "Units in stock", "operation": "sum", "field": "stock"}, {"label": "Products", "operation": "count", "field": null}, {"label": "Average stock", "operation": "average", "field": "stock"}], "chart": {"label": "Units by category", "group": "category", "field": "stock"}}
+  }
+}

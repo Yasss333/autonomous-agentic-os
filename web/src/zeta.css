@@ -1,0 +1,94 @@
+.zeta {
+  --z-ink: #1e1930;
+  --z-muted: #665e76;
+  --z-line: #e7e3ed;
+  --z-violet: #6441ac;
+  --z-soft: #f0ebff;
+  color: var(--z-ink);
+  padding: clamp(16px, 3vw, 34px);
+  min-height: calc(100dvh - 52px);
+  background: radial-gradient(ellipse at 95% 0%, #efebff, transparent 48%), #f8f7fa;
+}
+.zeta button, .zeta textarea, .zeta input, .zeta select { font: inherit; }
+.zeta button:not(:disabled), .zeta summary { cursor: pointer; }
+.zeta :focus-visible { outline: 2px solid #7653c0; outline-offset: 3px; }
+.zeta h1, .zeta h2, .zeta h3, .zeta p { margin: 0; }
+.zeta-heading { display: flex; align-items: center; gap: 13px; margin: 0 auto 19px; max-width: 1500px; }
+.zeta-mark {
+  display: grid; place-items: center; width: 43px; height: 43px; flex: 0 0 43px;
+  background: linear-gradient(145deg, #8867d2, #53308f);
+  color: #fff; font-weight: 750; font-size: 21px; border-radius: 13px; box-shadow: 0 5px 12px #54319130;
+}
+.zeta-heading h1 { font-size: 1.35rem; line-height: 1.1; letter-spacing: -.035em; }
+.zeta-heading p { color: var(--z-muted); font-size: .8rem; margin-top: 4px; }
+.zeta-project { margin-left: auto; max-width: 40%; overflow-wrap: anywhere; color: var(--z-muted); background: #fff; border: 1px solid var(--z-line); padding: 4px 11px; border-radius: 20px; font-size: .76rem; }
+.zeta-layout { display: grid; grid-template-columns: minmax(315px, .92fr) minmax(0, 1.08fr); gap: 14px; max-width: 1500px; margin: 0 auto; align-items: start; }
+.zeta-chat, .zeta-preview { min-width: 0; min-height: min(610px, 76vh); background: #fff; border: 1px solid var(--z-line); border-radius: 16px; overflow: hidden; box-shadow: 0 5px 22px #32254d09; display: flex; flex-direction: column; }
+.zeta-panel-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; min-height: 50px; padding: 11px 16px; border-bottom: 1px solid var(--z-line); }
+.zeta-panel-head h2 { font-size: .9rem; }
+.zeta-panel-head > span { color: var(--z-muted); font-size: .75rem; }
+.zeta-transcript { flex: 1; min-height: 260px; max-height: 56vh; overflow: auto; padding: 16px; }
+.zeta-welcome { padding: clamp(14px, 3.4vw, 38px) 2px; }
+.zeta-spark { display: grid; place-items: center; width: 43px; height: 43px; border-radius: 13px; background: var(--z-soft); color: var(--z-violet); font-size: 1.25rem; margin-bottom: 12px; }
+.zeta-welcome h2 { font-size: clamp(1.15rem, 2vw, 1.64rem); line-height: 1.24; letter-spacing: -.035em; }
+.zeta-welcome p, .zeta-preview-empty p, .zeta-app-title p { color: var(--z-muted); font-size: .87rem; margin-top: 6px; }
+.zeta-starters { display: grid; gap: 6px; margin-top: 15px; }
+.zeta-starters button { text-align: left; display: grid; grid-template-columns: 19px 1fr auto; align-items: center; gap: 8px; background: #fbfafc; border: 1px solid var(--z-line); border-radius: 9px; color: var(--z-ink); padding: 8px 10px; font-size: .85rem; }
+.zeta svg { vertical-align: -.125em; }
+.zeta-starters svg { color: var(--z-violet); }
+.zeta-starters button:hover, .zeta-secondary:hover { background: var(--z-soft); }
+.zeta-turn { margin-bottom: 16px; }
+.zeta-prompt { margin: 0 0 12px auto !important; padding: 10px 12px; width: fit-content; max-width: 87%; white-space: pre-wrap; overflow-wrap: anywhere; background: var(--z-soft); border-radius: 11px 11px 3px 11px; font-size: .87rem; }
+.zeta-trace { border: 1px solid var(--z-line); border-radius: 11px; padding: 8px 10px; font-size: .82rem; overflow-wrap: anywhere; }
+.zeta-trace summary { font-weight: 700; }
+.zeta-trace summary span { color: var(--z-violet); margin-left: 4px; }
+.zeta-trace summary small { float: right; color: var(--z-muted); font-weight: 500; }
+.zeta-trace ol, .zeta-trace ul { list-style: none; padding-left: 13px; margin: 8px 0 0; border-left: 1px solid #dcd1ef; }
+.zeta-trace li { position: relative; padding-bottom: 8px; }
+.zeta-trace li::before { content: ''; position: absolute; width: 6px; height: 6px; left: -17px; top: .44em; border-radius: 100%; background: #8668be; border: 1px solid white; }
+.zeta-trace li p, .zeta-working { color: var(--z-muted); }
+.zeta-trace-error strong, .zeta-storage-error { color: #9f233d; }
+.zeta-compose { padding: 11px 12px; border-top: 1px solid var(--z-line); }
+.zeta-compose textarea { display: block; width: 100%; min-height: 70px; resize: vertical; padding: 9px 11px; background: #fdfcfe; color: var(--z-ink); border: 1px solid var(--z-line); border-radius: 10px; font-size: .88rem; }
+.zeta-compose-bar, .zeta-review { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+.zeta-compose-bar label, .zeta-review { color: var(--z-muted); font-size: .78rem; }
+.zeta-compose-bar label { display: flex; align-items: center; gap: 5px; }
+.zeta input[type="checkbox"] { accent-color: var(--z-violet); width: 16px; height: 16px; }
+.zeta-review { margin: 0; padding: 8px 12px; background: var(--z-soft); }
+.zeta-review button + button { margin-left: 5px; }
+.zeta .zeta-primary, .zeta .zeta-secondary { border: 1px solid var(--z-line); background: #fff; color: var(--z-ink); border-radius: 8px; padding: 6px 10px; font-size: .8rem; font-weight: 650; }
+.zeta .zeta-primary { color: white; background: var(--z-violet); border-color: var(--z-violet); }
+.zeta-primary:disabled { opacity: .52; }
+.zeta-view-toggle { display: flex; padding: 2px; gap: 2px; border-radius: 8px; background: #f5f2f8; }
+.zeta-view-toggle button { padding: 3px 7px; border: 1px solid transparent; background: transparent; border-radius: 6px; color: var(--z-muted); font-size: .75rem; }
+.zeta-view-toggle button[aria-pressed="true"] { background: #fff; border-color: var(--z-line); color: var(--z-ink); }
+.zeta-preview-body { flex: 1; display: flex; flex-direction: column; padding: 15px; min-height: 330px; }
+.zeta-preview-empty { margin: auto; text-align: center; padding: 25px; }
+.zeta-preview-empty > span { display: grid; place-items: center; width: 58px; height: 58px; margin: 0 auto 13px; border-radius: 18px; background: var(--z-soft); color: var(--z-violet); font-size: 1.5rem; }
+.zeta-preview-empty h3 { font-size: 1rem; }
+.zeta-preview-status { display: flex; align-items: center; gap: 5px; color: var(--z-muted); font-size: .75rem; margin-bottom: 12px; }
+.zeta-preview-status span { width: 7px; height: 7px; background: var(--z-violet); border-radius: 50%; }
+.zeta-app-title { display: flex; justify-content: space-between; gap: 8px; align-items: start; flex-wrap: wrap; margin-bottom: 12px; overflow-wrap: anywhere; }
+.zeta-app-title h2 { font-size: 1.26rem; }
+.zeta-record-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(145px, 100%), 1fr)); gap: 8px; padding: 12px; margin-bottom: 12px; border: 1px solid var(--z-line); border-radius: 10px; }
+.zeta-record-form label span { display: block; font-size: .8rem; font-weight: 620; margin-bottom: 4px; }
+.zeta-record-form input:not([type='checkbox']), .zeta-record-form select { width: 100%; min-width: 0; padding: 6px; background: white; color: var(--z-ink); border: 1px solid #cdc5d7; border-radius: 6px; }
+.zeta-record-form > div { grid-column: 1 / -1; }
+.zeta-records { border: 1px solid var(--z-line); border-radius: 10px; overflow-x: auto; }
+.zeta-records table { border-collapse: collapse; min-width: 100%; margin: 0; font-size: .81rem; }
+.zeta-records th, .zeta-records td { padding: 6px 8px; text-align: left; border-bottom: 1px solid var(--z-line); }
+.zeta-records th { white-space: nowrap; background: #faf8fd; }
+.zeta-records td { overflow-wrap: anywhere; min-width: 55px; }
+.zeta-records p, .zeta-storage-error { padding: 8px; font-size: .8rem; }
+.zeta-actions { white-space: nowrap; }
+.zeta-actions button { border: 0; background: transparent; color: var(--z-violet); padding: 4px; font-size: .79rem; }
+.zeta-code { white-space: pre-wrap; overflow-wrap: anywhere; font-size: .78rem; margin: 0; padding: 10px; background: #faf8fd; border: 1px solid var(--z-line); border-radius: 10px; }
+@media (max-width: 930px) {
+  .zeta-layout { grid-template-columns: 1fr; }
+  .zeta-chat, .zeta-preview { min-height: 0; }
+  .zeta-preview-body { min-height: 245px; }
+}
+@media (max-width: 460px) {
+  .zeta { padding: 10px; }
+  .zeta-transcript { padding: 12px; min-height: 210px; }
+}

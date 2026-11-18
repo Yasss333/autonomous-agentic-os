@@ -6,13 +6,29 @@ export class ApiError extends Error {
   }
 }
 
-export async function api(path, { method = 'GET', body } = {}) {
-  const response = await fetch(`/api${path}`, {
-    method,
-    credentials: 'same-origin',
-    headers: body !== undefined ? { 'Content-Type': 'application/json' } : undefined,
+let getSessionToken
+
+export function setSessionTokenGetter(getToken) {
+  getSessionToken = getToken
+}
+
+export async function apiFetch(path, { body, ...options } = {}) {
+  const headers = new Headers()
+  if (body !== undefined) headers.set('Content-Type', 'application/json')
+  if (getSessionToken) {
+    const token = await getSessionToken()
+    if (!token) throw new ApiError(401, 'Not signed in')
+    headers.set('Authorization', `Bearer ${token}`)
+  }
+  return fetch(`/api${path}`, {
+    ...options,
+    headers,
     body: body !== undefined ? JSON.stringify(body) : undefined,
   })
+}
+
+export async function api(path, options) {
+  const response = await apiFetch(path, options)
   if (response.status === 204) return null
   const data = await response.json().catch(() => ({}))
   if (!response.ok) {

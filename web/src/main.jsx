@@ -1,5 +1,7 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useState } from 'react'
 import { createRoot } from 'react-dom/client'
+import { ArrowLeftIcon, ArrowRightIcon, BuildingsIcon, CheckSquareIcon, CubeIcon, MagnifyingGlassIcon, MicrophoneIcon, PlayCircleIcon, SparkleIcon, SquaresFourIcon, UserCircleIcon, WrenchIcon } from '@phosphor-icons/react'
+import { ClerkProvider, RedirectToSignIn, SignIn, useAuth, useClerk } from '@clerk/react'
 import {
   ACTIVITY_KINDS,
   ApiError,
@@ -8,167 +10,14 @@ import {
   api,
   fmtDate,
   fmtDateTime,
+  setSessionTokenGetter,
 } from './api.js'
 import './style.css'
+import { Studio } from './Studio.jsx'
+import { VoiceAssistant } from './VoiceAssistant.jsx'
+import { Zeta } from './Zeta.jsx'
 
-const PIPELINE = [
-  ['You ask', 'Plain English: “find leads idle for 7 days and create a follow-up task”.'],
-  ['It builds', 'The agent writes Python and a form description for your CRM.'],
-  ['It proves', 'The tool runs in a locked-down sandbox against real sample data.'],
-  ['It repairs', 'Failures go back to the agent — max 3 attempts, then it stops honestly.'],
-  ['You ship', 'Review, activate, run. Roll back to any previous version in one click.'],
-]
-
-function Landing() {
-  return (
-    <div className="landing">
-      <nav className="topnav" aria-label="Main">
-        <a className="brandmark" href="/"><span className="dot" />Agentic OS</a>
-        <div className="links">
-          <a href="#how">How it works</a>
-          <a href="#features">Features</a>
-          <a href="#faq">FAQ</a>
-          <a className="button" href="/login">Launch demo</a>
-        </div>
-      </nav>
-
-      <header className="hero">
-        <p className="eyebrow">Your CRM, on autopilot</p>
-        <h1>Say what you need. The agent builds the tool.</h1>
-        <p className="sub">
-          Agentic OS turns a plain-English request into a working CRM
-          automation — generated, sandbox-tested, repaired, and versioned.
-          No consultants. No six-month rollout. Just describe the workflow.
-        </p>
-        <div className="ctas">
-          <a className="button big" href="/login">Launch demo</a>
-          <a className="button big secondary" href="#how">See how it works</a>
-        </div>
-
-        <div className="preview" aria-hidden="true">
-          <div className="bar"><i /><i /><i /></div>
-          <div className="mock">
-            <div className="side">
-              <i className="on" /><i /><i /><i /><i />
-            </div>
-            <div className="body">
-              <div className="kpis">
-                <div className="kpi"><b>30</b><span>Leads</span></div>
-                <div className="kpi"><b>8</b><span>Companies</span></div>
-                <div className="kpi"><b>13</b><span>Open tasks</span></div>
-              </div>
-              <table>
-                <thead><tr><th>Lead</th><th>Stage</th><th>Last contact</th></tr></thead>
-                <tbody>
-                  <tr><td>Noah Weber</td><td><span className="badge gray">lost</span></td><td>Oct 18</td></tr>
-                  <tr><td>Ava Okafor</td><td><span className="badge blue">contacted</span></td><td>Oct 13</td></tr>
-                  <tr><td>Priya Nair</td><td><span className="badge green">qualified</span></td><td>Nov 10</td></tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      </header>
-
-      <section className="section problem">
-        <div className="problem-grid">
-          <div>
-            <h2>The problem</h2>
-            <p className="lead">
-              Every CRM needs custom follow-up logic — “nudge leads who went
-              quiet”, “flag deals stuck in stage two”. But building that
-              means hiring developers, waiting weeks, and praying the
-              automation doesn&apos;t corrupt your data.
-            </p>
-          </div>
-          <div className="solution">
-            <h2>The agent does it for you</h2>
-            <p className="lead">
-              You describe the rule once. The agent writes the code, tests it
-              in isolation, repairs its own mistakes, and hands you a
-              versioned tool you can activate — or roll back — in seconds.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      <section className="section" id="how">
-        <h2>From sentence to running tool</h2>
-        <p className="lead">Five steps. You only do the first and the last.</p>
-        <div className="pipeline">
-          {PIPELINE.map(([title, text], i) => (
-            <div className="pipe-step" key={title}>
-              <div className="pipe-num">{i + 1}</div>
-              <h3>{title}</h3>
-              <p>{text}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      <section className="section" id="features">
-        <h2>Built for trust, not just speed</h2>
-        <p className="lead">Agents are only useful if you can verify what they did. Every step is inspectable.</p>
-        <div className="features">
-          <div className="feature">
-            <div className="ico">L</div>
-            <div>
-              <h3>Lead follow-up engine</h3>
-              <p>Find stale leads, draft follow-ups, and track every task back to its source lead.</p>
-            </div>
-          </div>
-          <div className="feature">
-            <div className="ico">Q</div>
-            <div>
-              <h3>Isolated QA</h3>
-              <p>Generated code runs in a network-less Docker sandbox — no keys, no database, hard limits.</p>
-            </div>
-          </div>
-          <div className="feature">
-            <div className="ico">V</div>
-            <div>
-              <h3>Versioned tools</h3>
-              <p>Every passing version is immutable. Activate or roll back with one click.</p>
-            </div>
-          </div>
-          <div className="feature">
-            <div className="ico">K</div>
-            <div>
-              <h3>Bring your own key</h3>
-              <p>One sponsored AI task per account; afterwards use your own OpenRouter key, held in memory only.</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section className="section faq" id="faq">
-        <h2>Questions</h2>
-        <details>
-          <summary>Do I need my own API key?</summary>
-          <p>Each invited account gets one sponsored AI generation task. After that, you can attach your own OpenRouter key for the session — it is never saved to the database or sent to generated-code containers.</p>
-        </details>
-        <details>
-          <summary>Is this a finished product?</summary>
-          <p>No — it&apos;s an internship prototype. It runs against sample CRM data in a single demo workspace. Public multi-tenant hardening is deliberately out of scope.</p>
-        </details>
-        <details>
-          <summary>Where does my data live?</summary>
-          <p>In a managed Postgres database (Neon). Generated tools receive a read-only snapshot and can only propose fixed CRM operations, which the server validates before writing.</p>
-        </details>
-      </section>
-
-      <section className="cta-band">
-        <div className="section">
-          <h2>Your next CRM automation is one sentence away.</h2>
-          <p>Sign in with your invited account and watch the agent work.</p>
-          <a className="button big" href="/login">Launch demo</a>
-        </div>
-      </section>
-
-      <footer>Autonomous Agentic OS — internship prototype. Sample data only.</footer>
-    </div>
-  )
-}
+import { Landing } from './Landing.jsx'
 
 function Login({ onDone }) {
   const [email, setEmail] = useState('')
@@ -590,9 +439,9 @@ function LeadsView({ companies, refreshKey, onChanged }) {
         </table>
       )}
       <div className="row pager">
-        <button disabled={offset === 0} onClick={() => setOffset(Math.max(0, offset - limit))}>← Prev</button>
+        <button disabled={offset === 0} onClick={() => setOffset(Math.max(0, offset - limit))}><ArrowLeftIcon aria-hidden="true" /> Prev</button>
         <span className="muted">{offset + 1}–{Math.min(offset + limit, total)} of {total}</span>
-        <button disabled={offset + limit >= total} onClick={() => setOffset(offset + limit)}>Next →</button>
+        <button disabled={offset + limit >= total} onClick={() => setOffset(offset + limit)}>Next <ArrowRightIcon aria-hidden="true" /></button>
       </div>
       {selected && (
         <LeadDetail leadId={selected} companies={companies}
@@ -1304,10 +1153,11 @@ function UsagePanel() {
   )
 }
 
-function Workspace() {
+function Workspace({ clerkSignOut }) {
   const [me, setMe] = useState(null)
-  const [authState, setAuthState] = useState('loading') // loading | anon | needs_password | ready
-  const [tab, setTab] = useState('leads')
+  const [authState, setAuthState] = useState('loading')
+  const [accessError, setAccessError] = useState('')
+  const [tab, setTab] = useState('zeta')
   const [refreshKey, setRefreshKey] = useState(0)
   const [companies, setCompanies] = useState([])
   const [leads, setLeads] = useState([])
@@ -1320,7 +1170,10 @@ function Workspace() {
         setMe(data)
         setAuthState(data.must_change_password ? 'needs_password' : 'ready')
       })
-      .catch((err) => setAuthState(err instanceof ApiError && err.status === 401 ? 'anon' : 'anon'))
+      .catch((err) => {
+        setAccessError(err.message || 'Workspace access could not be checked.')
+        setAuthState(!clerkSignOut && err instanceof ApiError && err.status === 401 ? 'anon' : 'error')
+      })
   }, [])
 
   useEffect(() => {
@@ -1331,11 +1184,24 @@ function Workspace() {
   }, [authState])
 
   async function logout() {
+    if (clerkSignOut) {
+      try { await clerkSignOut() } catch {
+        setAccessError('Could not sign out. Please try again.')
+      }
+      return
+    }
     try { await api('/auth/logout', { method: 'POST' }) } catch {}
     window.location.href = '/'
   }
 
   if (authState === 'loading') return <main className="auth"><p>Loading…</p></main>
+  if (authState === 'error') {
+    return <main className="auth">
+      <h1>Workspace unavailable</h1>
+      <ErrorNote error={accessError} />
+      {clerkSignOut && <button className="button" onClick={logout}>Sign out</button>}
+    </main>
+  }
   if (authState === 'anon') {
     return (
       <main className="auth">
@@ -1350,37 +1216,44 @@ function Workspace() {
   }
 
   const tabs = [
-    ['leads', 'Leads'],
-    ['companies', 'Companies'],
-    ['tasks', 'Tasks'],
-    ['runs', 'AI runs'],
-    ['tools', 'Tools'],
-    ['search', 'Search'],
+    ['zeta', 'Zeta assistant', SparkleIcon],
+    ['voice', 'Voice assistant', MicrophoneIcon],
+    ['studio', 'Sample apps', SquaresFourIcon],
+    ['leads', 'Leads', UserCircleIcon],
+    ['companies', 'Companies', BuildingsIcon],
+    ['tasks', 'Tasks', CheckSquareIcon],
+    ['runs', 'AI runs', PlayCircleIcon],
+    ['tools', 'Tools', WrenchIcon],
+    ['search', 'Search', MagnifyingGlassIcon],
   ]
   const tabLabel = tabs.find(([k]) => k === tab)?.[1] || 'Workspace'
 
   return (
     <div className="app">
       <aside className="sidenav">
-        <a className="brandmark" href="/"><span className="dot" />Agentic OS</a>
-        {tabs.map(([key, label]) => (
+        <a className="brandmark" href="/"><CubeIcon aria-hidden="true" weight="duotone" size="1.25em" />Agentic OS</a>
+        {tabs.map(([key, label, Icon]) => (
           <button key={key} className={tab === key ? 'active' : ''}
-            onClick={() => setTab(key)}>{label}</button>
+            onClick={() => setTab(key)}><Icon aria-hidden="true" size="1.15em" />{label}</button>
         ))}
         <div className="spacer" />
         <div className="who">
           <div>{me.email}</div>
           <div className="muted-nav">{me.workspace_slug} workspace</div>
           <button onClick={logout}>Sign out</button>
+          <ErrorNote error={accessError} />
         </div>
       </aside>
       <div className="maincol">
         <div className="topbar">
-          <span className="appname">CRM Workspace</span>
+          <span className="appname">Agentic OS Workspace</span>
           <span className="me">{me.workspace_slug}</span>
         </div>
-        <div className="content">
+        <div hidden={tab !== 'zeta'}><Zeta userId={me.id} /></div>
+        <div className="content" hidden={tab === 'zeta'}>
           <h1>{tabLabel}</h1>
+          {tab === 'voice' && <VoiceAssistant />}
+          {tab === 'studio' && <Studio userId={me.id} />}
           {tab === 'leads' && (
         <LeadsView companies={companies} refreshKey={refreshKey}
           onChanged={() => setRefreshKey((k) => k + 1)} />
@@ -1414,4 +1287,35 @@ function App() {
   return <Landing />
 }
 
-createRoot(document.getElementById('root')).render(<App />)
+function ClerkApp() {
+  const { getToken, isLoaded, isSignedIn, sessionId } = useAuth()
+  const { signOut } = useClerk()
+  const path = window.location.pathname
+
+  useLayoutEffect(() => {
+    setSessionTokenGetter(getToken)
+    return () => setSessionTokenGetter(undefined)
+  }, [getToken])
+
+  if (path !== '/login' && path !== '/workspace') return <Landing />
+  if (!isLoaded) return <main className="auth"><p>Loading…</p></main>
+  if (path === '/login') {
+    if (isSignedIn) return <RedirectToWorkspace />
+    return <main className="auth">
+      <SignIn routing="hash" forceRedirectUrl="/workspace" />
+      <p><a href="/">Back to home</a></p>
+    </main>
+  }
+  if (!isSignedIn) return <RedirectToSignIn />
+  return <Workspace key={sessionId} clerkSignOut={() => signOut({ redirectUrl: '/' })} />
+}
+
+function RedirectToWorkspace() {
+  useEffect(() => { window.location.replace('/workspace') }, [])
+  return <main className="auth"><p>Opening workspace…</p></main>
+}
+
+const clerkKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY
+createRoot(document.getElementById('root')).render(clerkKey
+  ? <ClerkProvider publishableKey={clerkKey} signInUrl="/login"><ClerkApp /></ClerkProvider>
+  : <App />)
