@@ -20,6 +20,12 @@ DATABASE_URL = os.environ.get("DATABASE_URL", "")
 DATABASE_DIRECT_URL = os.environ.get("DATABASE_DIRECT_URL", "") or DATABASE_URL
 
 APP_ENV = os.environ.get("APP_ENV", "development")
+LOCAL_DEMO = APP_ENV == "development" and os.environ.get("LOCAL_DEMO", "") == "1"
+CLERK_ISSUER = os.environ.get("CLERK_ISSUER", "").strip().rstrip("/")
+CLERK_AUTHORIZED_PARTIES = {
+    origin.strip() for origin in os.environ.get("CLERK_AUTHORIZED_PARTIES", "").split(",")
+    if origin.strip()
+}
 SESSION_COOKIE_SECURE = _bool("SESSION_COOKIE_SECURE", APP_ENV == "production")
 SESSION_TTL_SECONDS = int(os.environ.get("SESSION_TTL_SECONDS", str(7 * 24 * 3600)))
 ALLOWED_ORIGINS = {
@@ -29,6 +35,7 @@ SEED_WORKSPACE_SLUG = os.environ.get("SEED_WORKSPACE_SLUG", "demo")
 
 # Phase 2
 RUNNER_TOKEN = os.environ.get("RUNNER_TOKEN", "")
+STUDIO_OPENROUTER_API_KEY = os.environ.get("STUDIO_OPENROUTER_API_KEY", "")
 OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY", "")
 # Comma-separated catalog IDs the demo may use; paid models are never allowed.
 FREE_MODEL_ALLOWLIST = {

@@ -55,8 +55,22 @@ Rules for source_code:
   create_followup_task {title, due_date, lead_id?},
   add_activity {lead_id, kind, body},
   update_lead_stage {lead_id, stage}.
+- Every operation MUST have a flat 'op' discriminator, for example:
+  {"op":"create_followup_task","title":"Follow up with Alex","due_date":"2026-11-21","lead_id":"uuid"}.
+  Never nest operation fields under the operation name.
+- Task status is exactly open, done, or cancelled. Only status == 'open' is an open task.
 - Only stdlib imports. No network, files, or environment access.
 - Dates are ISO strings. Do not crash on missing fields.
+- Snapshot lead fields: id, name, stage, last_contact_date, value, currency; tasks have id,title,lead_id,status,due_date.
+- Use context.snapshot, never context directly for records. Exclude customer/lost leads from follow-up actions.
+- Before creating tasks, check existing open tasks for that lead to prevent duplicates.
+- input_schema must be JSON Schema with properties using string/number/integer/boolean and defaults. Use enum for choices.
+- Use an optional lead_id STRING for targeting one lead, not an array input. Empty means all eligible leads.
+- Output display must contain a summary string and optionally rows (list of objects). Pure read-only views may return no operations.
+- Include at least two meaningful tests defining run(result, tool). Tests must call tool.handle with populated synthetic snapshots and assert requested business behavior, boundaries and duplicates.
+- Tests must compute relative dates from datetime.date.today(), never hard-code today's date. Pass records inside {'snapshot': {'leads': [...], 'tasks': [...]}}. Every assert must explain the expected and actual value in its message.
+- ui_spec.components are heading/text/number/date/select/table/badge; form field keys must match input_schema properties.
+- On revisions retain the exact tool name requested so a new version is created.
 """
 
 
@@ -127,7 +141,7 @@ def node_specify(state: RunState) -> RunState:
         return state
     _record_usage(state, completion)
     parsed = _extract_json(completion.text) or {}
-    state["requirement"] = str(parsed.get("requirement") or state["prompt"])[:500]
+    state["requirement"] = str(parsed.get("requirement") or state["prompt"])[:4000]
     state["domain"] = str(parsed.get("domain") or "crm")[:60]
     # The same response may already contain a bundle; stash it for generate.
     if "source_code" in parsed:
@@ -193,6 +207,8 @@ def handle(tool_input, context):
 
 def node_generate(state: RunState) -> RunState:
     state["attempt"] = state.get("attempt", 0) + 1
+    if state['attempt'] == 1 and state.get('bundle'):
+        return state
     if state["attempt"] > config.MAX_GENERATION_ATTEMPTS:
         state["outcome"] = "failed"
         state["error_code"] = "attempts_exhausted"
@@ -211,7 +227,7 @@ def node_generate(state: RunState) -> RunState:
         {"role": "user", "content": (
             f"Requirement: {state.get('requirement') or state['prompt']}\n"
             f"Tool name hint: snake_case.\n"
-            + (f"Previous attempt failed QA. Diagnostics:\n{state.get('diagnostics','')[:2000]}\nFix the tool.\n"
+            + (f"Previous source:\n{json.dumps(state.get('bundle') or {})[:14000]}\nPrevious attempt failed QA. Diagnostics:\n{state.get('diagnostics','')[:3000]}\nFix the tool.\n"
                if state.get("diagnostics") else "")
             + "Respond with the tool JSON only."
         )},
@@ -303,6 +319,17 @@ def build_graph():
     return g.compile()
 
 
-def run_workflow(initial: RunState) -> RunState:
-    graph = build_graph()
-    return graph.invoke(initial, config={"recursion_limit": 15})
+def run_workflow(initial: RunState, on_progress=None) -> RunState:
+    state = dict(initial)
+    for update in build_graph().stream(initial, config={"recursion_limit": 20}, stream_mode="updates"):
+        for node, values in update.items():
+            state.update(values)
+            if on_progress:
+                if node in {"specify", "generate"}:
+                    on_progress("testing" if node == "generate" else "generating", {"attempt": state.get("attempt", 0), "message": "Code generated; checking contract and Docker tests." if node == "generate" else "Request prepared; generating Python."})
+                elif node == "qa":
+                    qa = state.get("qa_result") or {}
+                    on_progress("qa_passed" if qa.get("passed") else "qa_failed", {"attempt": state.get("attempt", 0), "message": "Docker checks passed." if qa.get("passed") else "QA found an issue.", "failures": qa.get("failures", [])[:6]})
+                elif node == "decide" and state.get("retry"):
+                    on_progress("repairing", {"attempt": state.get("attempt", 0), "message": "Returning QA diagnostics to the generator for repair."})
+    return state

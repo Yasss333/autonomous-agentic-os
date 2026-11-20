@@ -5,5 +5,8 @@ psycopg-pool
 pwdlib[argon2]
 email-validator
 python-dotenv
+PyJWT[crypto]
 litellm
 langgraph
+
+jsonschema==4.26.0

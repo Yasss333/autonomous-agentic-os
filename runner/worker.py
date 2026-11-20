@@ -65,7 +65,7 @@ def _resolve_key(job: dict) -> tuple[str, str]:
         if not key:
             raise RuntimeError("needs_key")
         return key, "reviewer_key"
-    if config.OPENROUTER_API_KEY:
+    if config.OPENROUTER_API_KEY or config.VELONA_API_KEY:
         return config.OPENROUTER_API_KEY, "sponsored"
     raise RuntimeError("needs_key")
 
@@ -89,7 +89,7 @@ def execute_generate(job: dict, lease_token: str) -> dict:
         "usage": [],
     }
     try:
-        state = graph.run_workflow(initial)
+        state = graph.run_workflow(initial, lambda kind, payload: _progress(lease_token, kind, payload))
     except Exception as exc:
         return {
             "outcome": "failed",
@@ -114,6 +114,8 @@ def execute_generate(job: dict, lease_token: str) -> dict:
         "error_code": state.get("error_code") or "unknown",
         "attempts": state.get("attempt", 0),
         "diagnostics": (state.get("diagnostics") or "")[:2000],
+        "bundle": state.get("bundle"),
+        "qa": state.get("qa_result"),
         "usage": usage,
     }
 

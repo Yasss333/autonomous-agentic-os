@@ -54,9 +54,32 @@ def validate_bundle(bundle: dict) -> list[str]:
         if not isinstance(bundle.get(key), dict):
             problems.append(f"{key} must be an object")
 
+    schema = bundle.get('input_schema')
+    if isinstance(schema, dict):
+        import json
+        if '"$ref"' in json.dumps(schema):
+            problems.append('Input schemas cannot reference other schemas')
+        from jsonschema import Draft202012Validator
+        from jsonschema.exceptions import SchemaError
+        try:
+            Draft202012Validator.check_schema(schema)
+        except SchemaError:
+            problems.append('input_schema must be valid JSON Schema')
+        if schema.get('type') != 'object':
+            problems.append('input_schema type must be object')
+        properties = schema.get('properties', {})
+        if not isinstance(properties, dict) or len(properties) > 12:
+            problems.append('Input form supports at most 12 fields')
+        else:
+            for field in properties.values():
+                if not isinstance(field, dict) or field.get('type') not in {'string', 'number', 'integer', 'boolean'}:
+                    problems.append('Input form supports string, number, integer and boolean fields only')
+                elif 'enum' in field and (not isinstance(field['enum'], list) or not all(isinstance(v, (str, int, float, bool)) for v in field['enum'])):
+                    problems.append('Input choices must be scalar values')
+
     ops = bundle.get("allowed_operations")
-    if not isinstance(ops, list) or not ops:
-        problems.append("allowed_operations must be a non-empty list")
+    if not isinstance(ops, list):
+        problems.append("allowed_operations must be a list")
     else:
         bad = set(ops) - ALLOWED_OPS
         if bad:
@@ -73,8 +96,8 @@ def validate_bundle(bundle: dict) -> list[str]:
                     problems.append(f"ui_spec.components[{i}] has unsupported type")
 
     tests = bundle.get("tests")
-    if tests is not None and not isinstance(tests, list):
-        problems.append("tests must be a list")
+    if not isinstance(tests, list) or len(tests) < 2:
+        problems.append("Include at least two behavioral tests")
 
     return problems
 

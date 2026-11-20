@@ -59,6 +59,13 @@ def complete(
     max_tokens: int = config.MAX_OUTPUT_TOKENS,
     timeout: int = config.MODEL_TIMEOUT_SECONDS,
 ) -> Completion:
+    if payer == "sponsored":
+        from api.llm import complete_json
+        try:
+            content, usage, selected = complete_json(messages, key=api_key, max_tokens=max_tokens)
+            return Completion(content, Usage(selected, payer, usage.get("prompt_tokens"), usage.get("completion_tokens")))
+        except RuntimeError as exc:
+            raise ProviderError("provider_unavailable", str(exc)) from None
     model = _model_id(model_id)
     if not api_key:
         raise ProviderError("needs_key", "No provider key available for this run")

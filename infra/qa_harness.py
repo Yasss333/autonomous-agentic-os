@@ -88,6 +88,12 @@ def main() -> int:
     last_result = None
 
     if module is not None:
+        original_handle = module.handle
+        def checked_handle(tool_input, tool_context):
+            result = original_handle(tool_input, tool_context)
+            _validate_result(result)
+            return result
+        module.handle = checked_handle
         inputs = job.get("inputs") or [{}]
         results = []
         for i, tool_input in enumerate(inputs):

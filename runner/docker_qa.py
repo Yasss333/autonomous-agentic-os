@@ -10,6 +10,8 @@ import json
 import subprocess
 import tempfile
 import time
+import uuid
+from datetime import date, timedelta
 from pathlib import Path
 
 from . import config
@@ -23,8 +25,9 @@ def _run_container(job: dict, timeout: int) -> dict:
     with tempfile.TemporaryDirectory(prefix="aos-qa-") as tmp:
         job_path = Path(tmp) / "job.json"
         job_path.write_text(json.dumps(job), encoding="utf-8")
+        container_name = "aos-qa-" + uuid.uuid4().hex
         cmd = [
-            "docker", "run", "--rm", "-i",
+            "docker", "run", "--rm", "-i", "--name", container_name,
             "--network", "none",
             "--read-only",
             "--tmpfs", "/tmp:rw,size=32m",
@@ -51,7 +54,7 @@ def _run_container(job: dict, timeout: int) -> dict:
             )
         except subprocess.TimeoutExpired:
             # Kill any leftover container from this job.
-            subprocess.run(["docker", "ps", "-q", "--filter", f"ancestor={config.QA_IMAGE}"],
+            subprocess.run(["docker", "rm", "-f", container_name],
                            capture_output=True, text=True)
             raise QAError("qa_timeout")
         elapsed = time.monotonic() - started
@@ -78,6 +81,12 @@ def run_qa(bundle: dict, inputs: list[dict], run_id: str | None = None) -> dict:
         "tests": bundle.get("tests") or [],
         "inputs": inputs or [{}],
         "run_id": run_id,
+        "snapshot": {"leads": [
+            {"id": "11111111-1111-4111-8111-111111111111", "name": "QA Lead", "stage": "new",
+             "last_contact_date": (date.today() - timedelta(days=14)).isoformat(), "value": 1000, "currency": "USD"},
+            {"id": "22222222-2222-4222-8222-222222222222", "name": "QA Customer", "stage": "customer",
+             "last_contact_date": (date.today() - timedelta(days=30)).isoformat(), "value": 500, "currency": "USD"}
+        ], "tasks": [], "companies": []},
     }
     return _run_container(job, config.QA_TIMEOUT_SECONDS)
 

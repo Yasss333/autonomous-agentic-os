@@ -9,7 +9,7 @@ from uuid import UUID
 from fastapi import Depends, HTTPException, Request, Response
 from psycopg.rows import dict_row
 
-from . import config, db, security
+from . import clerk_auth, config, db, security
 from .schemas import MeResponse
 
 
@@ -79,9 +79,36 @@ def clear_login_failures(request: Request, email: str) -> None:
     _login_attempts.pop(_throttle_key(request, email), None)
 
 
-async def current_user(
-    request: Request, response: Response, conn=Depends(get_conn)
+def _clerk_subject(request: Request) -> str | None:
+    if config.CLERK_ISSUER:
+        return clerk_auth.verify_session(request.headers.get("authorization", ""))
+    return None
+
+
+def current_user(
+    request: Request, response: Response, subject=Depends(_clerk_subject), conn=Depends(get_conn)
 ) -> CurrentUser:
+    if subject:
+        with conn.cursor(row_factory=dict_row) as cur:
+            cur.execute(
+                """
+                SELECT u.id, u.email, u.workspace_id, false AS must_change_password,
+                       w.slug AS workspace_slug,
+                       EXISTS (
+                         SELECT 1 FROM demo_allowances d
+                         WHERE d.user_id = u.id AND d.sponsored_used_at IS NOT NULL
+                       ) AS sponsored_task_used
+                FROM users u
+                JOIN workspaces w ON w.id = u.workspace_id
+                WHERE u.clerk_user_id = %s AND u.status = 'active'
+                """,
+                (subject,),
+            )
+            row = cur.fetchone()
+        if not row:
+            raise HTTPException(403, "This Clerk account is not invited to the workspace")
+        return CurrentUser(**row)
+
     token = request.cookies.get(security.SESSION_COOKIE)
     if not token:
         raise HTTPException(401, "Not signed in")

@@ -1,11 +1,16 @@
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from psycopg.rows import dict_row
 
-from .. import deps, security
+from .. import config, deps, security
 from ..deps import CurrentUser, check_login_throttle, clear_login_failures, get_conn, record_login_failure
 from ..schemas import ChangePasswordRequest, LoginRequest, MeResponse
 
-router = APIRouter(prefix="/auth", tags=["auth"])
+def require_legacy_auth():
+    if config.CLERK_ISSUER:
+        raise HTTPException(404, "Use Clerk to manage your session")
+
+
+router = APIRouter(prefix="/auth", tags=["auth"], dependencies=[Depends(require_legacy_auth)])
 
 
 @router.post("/login")

@@ -1,7 +1,7 @@
 {
   "crm": {
-    "name": "CRM",
-    "description": "Manage prospects and spot leads that need a follow-up.",
+    "name": "CRM — sample app",
+    "description": "Demonstrates lead follow-up automation.",
     "palette": "orange",
     "reference": "http://127.0.0.1:4173/",
     "referenceLabel": "Original Automation Studio",

@@ -142,9 +142,10 @@ def rollback(
         cur.execute(
             """SELECT id, version FROM tool_versions
                WHERE workspace_id = %s AND name = %s AND status = 'passed'
-                 AND id <> %s
+                 AND ((%s::integer IS NOT NULL AND version = %s) OR
+                      (%s::integer IS NULL AND version < (SELECT version FROM tool_versions WHERE id = %s)))
                ORDER BY version DESC LIMIT 1""",
-            (user.workspace_id, name, reg["active_version_id"]),
+            (user.workspace_id, name, payload.target_version, payload.target_version, payload.target_version, reg["active_version_id"]),
         )
         candidates = cur.fetchall()
         if payload.target_version is not None:
@@ -176,12 +177,17 @@ def invoke(
         if not reg or not reg["active_version_id"]:
             raise HTTPException(409, "Tool has no active version")
         cur.execute(
-            "SELECT version, status FROM tool_versions WHERE id = %s",
+            "SELECT version, status, input_schema FROM tool_versions WHERE id = %s",
             (reg["active_version_id"],),
         )
         tv = cur.fetchone()
         if not tv or tv["status"] != "passed":
             raise HTTPException(409, "Active version is not QA-passed")
+
+        from jsonschema import Draft202012Validator
+        errors = list(Draft202012Validator(tv["input_schema"]).iter_errors(payload.input))
+        if errors:
+            raise HTTPException(422, "Tool input does not match the generated form: " + errors[0].message[:200])
 
         # Business idempotency: one effect per (workspace, key).
         cur.execute(

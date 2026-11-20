@@ -1,9 +1,13 @@
 import os
+from pathlib import Path
+from dotenv import load_dotenv
+load_dotenv(Path(__file__).resolve().parents[1] / ".env")
 
 API_BASE_URL = os.environ.get("API_BASE_URL", "http://127.0.0.1:8000/api").rstrip("/")
 RUNNER_TOKEN = os.environ.get("RUNNER_TOKEN", "")
 WORKER_ID = os.environ.get("WORKER_ID", "laptop-1")
 OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY", "")
+VELONA_API_KEY = os.environ.get("VELONA_API_KEY", "")
 QA_IMAGE = os.environ.get("QA_IMAGE", "agentic-os-qa:latest")
 RUNNER_FIXTURE = os.environ.get("RUNNER_FIXTURE", "") == "1"
 

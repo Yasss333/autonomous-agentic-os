@@ -47,7 +47,7 @@ def set_status(conn, run_id: UUID, status: str, fields: dict | None = None) -> N
     }
     cols.update(safe)
     assignments = ", ".join(f"{k} = %s" for k in cols)
-    with conn.cursor() as cur:
+    with conn.cursor(row_factory=dict_row) as cur:
         cur.execute(
             f"UPDATE runs SET {assignments} WHERE id = %s",
             (*cols.values(), run_id),
@@ -58,7 +58,7 @@ def set_status(conn, run_id: UUID, status: str, fields: dict | None = None) -> N
 
 
 def runner_online(conn) -> bool:
-    with conn.cursor() as cur:
+    with conn.cursor(row_factory=dict_row) as cur:
         cur.execute(
             "SELECT 1 FROM workers WHERE last_seen > now() - interval '90 seconds' LIMIT 1"
         )
@@ -93,7 +93,9 @@ def create_run(
             if existing:
                 return existing["id"], False
 
-        if kind == "generate" and credential_mode == "sponsored":
+        if kind == "generate" and not runner_online(conn):
+            raise HTTPException(503, "Runner is offline. Start the worker and retry.")
+        if kind == "generate" and credential_mode == "sponsored" and not config.LOCAL_DEMO:
             # One sponsored generation run per account, ever (demo).
             cur.execute(
                 "SELECT sponsored_used_at FROM demo_allowances WHERE user_id = %s FOR UPDATE",
@@ -277,7 +279,7 @@ def crm_snapshot(cur, workspace_id: UUID, limit: int = 200) -> dict:
 
 def heartbeat(conn, lease_token: str, worker_id: str) -> bool:
     token_hash = hashlib.sha256(lease_token.encode()).hexdigest()
-    with conn.cursor() as cur:
+    with conn.cursor(row_factory=dict_row) as cur:
         cur.execute(
             """UPDATE job_leases
                SET expires_at = now() + interval '30 seconds'
@@ -321,7 +323,7 @@ def submit_progress(conn, lease_token: str, worker_id: str, kind: str, payload: 
         "needs_key": "needs_key",
     }
     new_status = status_map.get(kind)
-    with conn.cursor() as cur:
+    with conn.cursor(row_factory=dict_row) as cur:
         if new_status:
             cur.execute(
                 "UPDATE runs SET status = %s, updated_at = now() WHERE id = %s",
@@ -355,6 +357,10 @@ def submit_result(conn, lease_token: str, worker_id: str, result: dict):
             )
 
         tool_version_id = None
+        if outcome == 'failed' and lease['kind'] == 'generate' and isinstance(result.get('bundle'), dict):
+            rejected = result['bundle']
+            if len(json.dumps(rejected)) < 150000:
+                cur.execute('UPDATE runs SET bundle = %s WHERE id = %s', (Jsonb(rejected), run_id))
         if outcome == "awaiting_activation" and lease["kind"] == "generate":
             bundle = result.get("bundle") or {}
             source = bundle.get("source_code", "")

@@ -3,8 +3,8 @@ from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
-from . import db, deps
-from .routers import auth, crm, runs, session_keys, tools, worker
+from . import db, deps, config
+from .routers import auth, crm, runs, session_keys, studio, tools, worker, zeta, assistant
 from .schemas import ErrorResponse, MeResponse
 
 app = FastAPI(title="Autonomous Agentic OS", version="0.1.0")
@@ -13,6 +13,9 @@ app.include_router(auth.router, prefix="/api")
 app.include_router(crm.router, prefix="/api")
 app.include_router(runs.router, prefix="/api")
 app.include_router(session_keys.router, prefix="/api")
+app.include_router(studio.router, prefix="/api")
+app.include_router(zeta.router, prefix="/api")
+app.include_router(assistant.router, prefix="/api")
 app.include_router(tools.router, prefix="/api")
 app.include_router(worker.router, prefix="/api")
 
@@ -42,6 +45,7 @@ def status(user: deps.CurrentUser = Depends(deps.current_user), conn=Depends(dep
     return {
         "runner_online": run_store.runner_online(conn),
         "sponsored_task_used": bool(row and row["sponsored_used_at"]),
+        "local_demo": config.LOCAL_DEMO,
         "database": "ok",
     }
 
